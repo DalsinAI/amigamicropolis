@@ -1,81 +1,54 @@
-# Micropolis for AROS
+# Micropolis
 
-A native AROS port of **Micropolis**, the open-source release of the original
-SimCity Classic simulation by Will Wright and Don Hopkins. The simulation is
-the [MicropolisCore](https://github.com/SimHacker/MicropolisCore) C++ engine,
-pinned and patched; the user interface is a new frontend written for AROS with
-Intuition, CyberGraphics, GadTools, ASL, icon.library and AHI. It needs neither
-SDL nor Tcl/Tk.
+**SimCity Classic, the open-source release, native on the Amiga.**
 
-The interface follows the classic Tcl/Tk (OLPC) edition of Micropolis: its tool
-palette and radial tool menus, startup and scenario screen, overview map with
-overlays and R/C/I demand, history graphs, budget and evaluation windows,
-located messages and menus, all adapted to native Amiga windows.
+<p align="center">
+  <img src="docs/screenshots/play-1.png" width="640" alt="Micropolis on the Amiga">
+</p>
 
-**Status:** `0.1.0-rc4`, a release candidate for **x86_64 AROS ABIv11** (AROS
-One and other ABIv11 distributions). It is tested on AROS One 1.3 x86_64. A
-mainline (ABIv1) build compiles and links but has not been run; the two ABIs
-are not binary compatible.
+<p align="center">
+  <img src="docs/screenshots/title.png" width="310" alt="Title screen">
+  <img src="docs/screenshots/play-2.png" width="310" alt="In the game">
+</p>
 
-## Installing
+<p align="center"><sub>Captured from this build running on AmigaOS.</sub></p>
 
-Download `micropolis.x86_64-aros-v11.lha` from the
-[releases](https://github.com/tomaszstaniak/aros-micropolis/releases), extract
-it to an installed writable disk and keep the `Micropolis` drawer and
-`Micropolis.info` together. Double-click the Micropolis icon. No installer and
-no extra game data are needed.
+Lay out roads, zone your city, balance the budget and survive the monster. Micropolis is the GPL release of Will Wright and Don Hopkins's original SimCity, and this is a native Intuition, GadTools and AHI front end for it on AmigaOS 3.x, with every tool, the pie menus, the eight scenarios and load/save of .cty cities.
 
-Double-clicking a city icon (for example `CITY.CTY`) opens that city directly.
-Every city you save gets its own icon. Save to an installed disk; the default
-folder is `SYS:Micropolis/`. RAM: is lost at reboot.
+## What you need
 
-## Playing
+A 68040 or 68060 with an FPU, AmigaOS 3.2 or later, an RTG card (15-bit or more), AHI.
 
-| Input | Action |
+Everything the game needs comes in its drawer, including the scenario cities.
+
+## Controls
+
+| Key | Does |
 |---|---|
-| LMB | build or paint with the selected tool |
-| Shift+LMB | classic radial tool menu (also the "Pie" line in Tools) |
-| RMB | application menu, in every Micropolis window |
-| Middle mouse drag, cursor keys | move the map |
-| `+` / `-` / mouse wheel, `0` | zoom 50/100/200%, back to 100% |
-| Space, N | run/pause, single step |
-| F1-F7 | commands, budget, evaluation, messages, graphs, speed, overview |
-| F9, F10 | choose a screen mode, switch between Workbench and own screen |
-| S, L, Esc | save, load, quit |
+| Mouse | Build, pick tools (hold for the pie menu) |
+| Arrows | Scroll the map |
+| F9 | Screen mode |
+| Window gadgets | Budget, evaluation, graphs, map |
 
-**Chalk** draws notes on the map and **Eraser** removes whole chalk strokes,
-as in the original; chalk is free and is not saved with the city. Micropolis >
-Choose City (Amiga+N) returns to the city selection during play. Quitting,
-loading or choosing another city asks first whenever the current city has
-unsaved changes. Window positions are remembered separately for the Workbench
-and for the private screen.
+## What works
 
-There is no music: the original game has sound effects only, which are played
-through AHI when available.
+- The whole classic game: scenarios, tools, disasters, budget, graphs, overview map
+- Runs on the Workbench when it is an RTG screen, or opens its own 640x480 16-bit screen
+- Saves in PROGDIR:Saves
+
+## Not in this build yet
+
+- RTG only: there is no AGA or 8-bit display
 
 ## Building
 
-See [docs/BUILDING.md](docs/BUILDING.md). In short, with an x86_64 AROS ABIv11
-cross toolchain and SDK configured in `local.env`:
+The Amiga build, its make file and what was changed for the 68k are described in [AMIGA_PORT.md](AMIGA_PORT.md).
 
-```sh
-bash scripts/bootstrap.sh      # pinned engine + patch series
-bash scripts/build-game.sh     # build/one/micropolis
-bash scripts/package-game.sh   # runnable ZIP of the whole drawer
-```
+## Credits and licence
 
-Host tests (macOS or Linux, clang with sanitizers) live under `tests/`.
-[docs/DESIGN.md](docs/DESIGN.md) describes the frontend and every deliberate
-difference from the classic interface. Changes are listed in
-[CHANGELOG.md](CHANGELOG.md).
+MicropolisCore by Don Hopkins; Micropolis for AROS by Tomasz Staniak ([upstream](https://github.com/SimHacker/MicropolisCore)). Licence: GPL 3.
 
-## Licence
+Amiga port by The AmiCradle Team.
 
-The engine and the original artwork are GPL-3.0-or-later with additional terms
-from Electronic Arts under GPL section 7; the AROS frontend in this repository
-is GPL-3.0-or-later. See [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE).
 
-Micropolis is a registered trademark of Micropolis Corporation (Micropolis GmbH)
-and is used under the Micropolis Public Name License. SimCity is a trademark of
-Electronic Arts Inc.; this modified port is not affiliated with or endorsed by
-Electronic Arts.
+The original project's README is [README.upstream.md](README.upstream.md).

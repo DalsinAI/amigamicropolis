@@ -126,7 +126,10 @@ bool GameDisplay::resize() {
      * WritePixelArray converts the ARGB frame once, and the blit to the
      * window is a plain copy on every RTG system. */
     BitMap *screenBm=screen->RastPort.BitMap;
-    auto *replacement=AllocBitMap(next.width,next.height,GetBitMapAttr(screenBm,BMA_DEPTH),
+    /* The depth first: an inline library call inside another's arguments
+     * can clobber the registers the outer call has already loaded. */
+    const ULONG depth=GetBitMapAttr(screenBm,BMA_DEPTH);
+    auto *replacement=AllocBitMap(next.width,next.height,depth,
         BMF_MINPLANES|BMF_CLEAR,screenBm);
 #else
     auto *replacement=AllocBitMap(next.width,next.height,32,

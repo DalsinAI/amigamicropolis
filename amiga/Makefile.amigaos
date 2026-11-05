@@ -1,0 +1,125 @@
+# Micropolis for AmigaOS 3.x, 68040/68060 + FPU, on an RTG system.
+#
+#   make -f amiga/Makefile.amigaos -j2 \
+#        STOVE=/path/to/openamigagcc-16.2.0-open4 \
+#        NDK=/path/to/OpenNDK/Include_H DEPS=/path/to/m68k-amigaos
+#
+# The program is the AROS port's native Intuition / GadTools / ASL /
+# CyberGraphics / AHI frontend (src/) over the MicropolisCore engine,
+# whose patched sources (upstreams.json's pin + patches/micropoliscore/
+# series) and game data are kept in amiga/deps/micropoliscore. DEPS holds
+# the Team's cross-built libpng and zlib. The CyberGraphics and AHI
+# declarations the game needs are in amiga/include.
+# Output: dist/Micropolis/ (the program, tiles, sprites, sounds, startup
+# art, cities, Saves, icons, ReadMe, licences) and dist/Micropolis.info.
+
+STOVE   ?= $(HOME)/CradleLab/toolchain/openamigagcc-16.2.0-open4-x86_64-linux
+NDK     ?= $(HOME)/CradleLab/gfopensdk/OpenNDK/Include_H
+DEPS    ?= /mnt/amigachrome/team2/deps/m68k-amigaos
+ICONTOOL ?= /mnt/amigachrome/team2/tools/amicradle/scripts/port_icons.py
+PYTHON  ?= python3
+CC      = $(STOVE)/bin/m68k-amigaos-gcc
+CXX     = $(STOVE)/bin/m68k-amigaos-g++
+STRIP   = $(STOVE)/bin/m68k-amigaos-strip
+CPU     ?= -m68040 -m68881
+# -fno-tree-loop-distribute-patterns: GCC 16's loop miscompile.
+OPT     ?= -O2 -fomit-frame-pointer -fno-tree-loop-distribute-patterns
+
+ENGINE  = amiga/deps/micropoliscore
+BUILD   = build/amigaos
+OBJDIR  = $(BUILD)/obj
+GEN     = $(BUILD)/generated
+DIST    = dist
+OUT     = $(DIST)/Micropolis
+PROG    = Micropolis
+
+COMMON  = -noixemul $(OPT) $(CPU)
+INC     = -Iamiga/include -I$(NDK) -I$(DEPS)/include
+# As scripts/build-engine.sh and build-game.sh build them: C++17.
+CXXFLAGS = $(COMMON) -std=gnu++17 -include amiga/include/amiga_prelude.h \
+           -I$(ENGINE)/src -Isrc -I$(GEN) $(INC)
+CFLAGS   = $(COMMON) -Wall -Wextra $(INC)
+LDFLAGS = -noixemul $(CPU)
+LIBS    = -L$(DEPS)/lib -lpng -lz -lamiga -lm
+
+# The engine's makefile SOURCES without the two JavaScript-only units
+# (emscripten.cpp, callback.cpp), as scripts/build-engine.sh builds it.
+ESRC    = allocate animate budget connect disasters evaluate fileio generate \
+          graph initialize map frontendmessage message micropolis position \
+          power random scan simulate sprite tool traffic update utilities zone
+# scripts/build-game.sh's frontend units.
+FSRC    = game-audio startup-window bmp game classic-tool-ui graph-window \
+          overview-window game-menu save-replace display city-windows \
+          sprites messages message-window
+ASRC    = amiga_libs stack pthread_stubs
+
+OBJS    = $(ESRC:%=$(OBJDIR)/engine/%.o) $(FSRC:%=$(OBJDIR)/src/%.o) \
+          $(ASRC:%=$(OBJDIR)/amiga/%.o)
+GENHDR  = $(GEN)/classic-art.h $(GEN)/classic-graph-art.h $(GEN)/classic-overview-art.h
+
+all: $(OUT)/$(PROG) package
+
+$(BUILD)/$(PROG).debug: $(OBJS)
+	@mkdir -p $(dir $@)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+$(OUT)/$(PROG): $(BUILD)/$(PROG).debug
+	@mkdir -p $(dir $@)
+	$(STRIP) -o $@ $<
+
+$(OBJDIR)/engine/%.o: $(ENGINE)/src/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJDIR)/src/%.o: src/%.cpp | $(GENHDR)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJDIR)/amiga/%.o: amiga/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(GEN)/classic-art.h: scripts/build-classic-art.py
+	$(PYTHON) $< $@
+$(GEN)/classic-graph-art.h: scripts/build-classic-art.py
+	$(PYTHON) $< --family graphs $@
+$(GEN)/classic-overview-art.h: scripts/build-classic-art.py
+	$(PYTHON) $< --family overview $@
+
+# As scripts/stage-game.sh lays out the drawer, with the original MP3
+# effects already decoded to amiga/data/sounds (mono 22050 Hz 16-bit WAV)
+# and Saves/ for the player's cities.
+package: $(OUT)/$(PROG) AMIGA_PORT.md
+	mkdir -p $(OUT)/cities $(OUT)/sprites $(OUT)/sounds $(OUT)/Saves $(OUT)/icons $(OUT)/Licenses
+	cp $(ENGINE)/content/cities/*.cty $(OUT)/cities/
+	cp $(ENGINE)/content/cities/haight.cty $(OUT)/CITY.CTY
+	cp $(ENGINE)/content/tilesets/tiles.bmp $(OUT)/
+	cp $(ENGINE)/content/sprites/sprite_*.png $(OUT)/sprites/
+	cp amiga/data/sounds/*.wav $(OUT)/sounds/
+	$(PYTHON) scripts/build-startup-art.py $(OUT)/startup
+	cp $(ENGINE)/LICENSE $(ENGINE)/MicropolisGPLLicenseNotice.md \
+	   $(ENGINE)/MicropolisPublicNameLicense.md $(OUT)/Licenses/
+	for f in startup tools graphs overview; do \
+	  cp assets/classic-$$f/COPYING $(OUT)/Licenses/Classic-$$f-COPYING; \
+	  cp assets/classic-$$f/NOTICE.txt $(OUT)/Licenses/Classic-$$f-NOTICE.txt; done
+	cp AMIGA_PORT.md $(OUT)/ReadMe
+	cp LICENSE $(OUT)/COPYING.txt
+	$(MAKE) -f amiga/Makefile.amigaos icons
+
+# GlowIcons: amiga/icons/icons.json through AmiCradle's port_icons.py.
+# Data.info goes on every subdrawer; City.info on every bundled city and,
+# as icons/def_city.info, it is what the game gives each city it saves.
+icons:
+	rm -rf $(BUILD)/icons && mkdir -p $(BUILD)/icons
+	$(PYTHON) $(ICONTOOL) amiga/icons/icons.json --out $(BUILD)/icons
+	cp $(BUILD)/icons/Micropolis.info $(BUILD)/icons/ReadMe.info $(BUILD)/icons/COPYING.txt.info \
+	   $(BUILD)/icons/CITY.CTY.info $(OUT)/
+	cp $(BUILD)/icons/City.info $(OUT)/icons/def_city.info
+	for c in $(OUT)/cities/*.cty; do cp $(BUILD)/icons/CityIn.info "$$c.info"; done
+	cd $(OUT) && find . -mindepth 1 -type d | while read d; do cp $(CURDIR)/$(BUILD)/icons/Data.info "$$d.info"; done
+	cp $(BUILD)/icons/Micropolis-drawer.info $(DIST)/Micropolis.info
+
+clean:
+	rm -rf $(BUILD) $(DIST)
+
+.PHONY: all package icons clean

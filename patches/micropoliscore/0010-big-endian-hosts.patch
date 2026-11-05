@@ -1,0 +1,43 @@
+Title: 0010-big-endian-hosts
+Repository: micropoliscore
+Base-Commit: 69ccf87ed72d2d2950b70cf16ef1391439bd9d48
+Requires: 0009-free-sprite-lists.patch
+Author: AmigaOS 3.x port
+Date: 2026-11-05
+Upstream-Status: candidate
+Scope: generic - big-endian hosts whose compiler does not define __BIG_ENDIAN__
+
+Problem:
+  fileio.cpp chooses the word swap with #if !defined(__BIG_ENDIAN__). GCC for m68k (AmigaOS 3.x) does not define __BIG_ENDIAN__, so the big-endian 68k host swapped the big-endian .cty words and every city loaded and saved byte-swapped.
+Solution:
+  Decide on __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ (defined by GCC and Clang on every target), falling back to __BIG_ENDIAN__, else little-endian.
+Validation:
+  cross-compiled for m68k-amigaos; to be checked by loading the bundled cities on the Amiga.
+Removal:
+  Permanent fix.
+
+diff --git a/packages/micropolis-engine/src/fileio.cpp b/packages/micropolis-engine/src/fileio.cpp
+index 10d0345..e121ced 100644
+--- a/packages/micropolis-engine/src/fileio.cpp
++++ b/packages/micropolis-engine/src/fileio.cpp
+@@ -99,7 +99,19 @@
+  */
+ 
+ 
+-#if !defined(__BIG_ENDIAN__)
++/* GCC and Clang name the byte order in __BYTE_ORDER__ on every target;
++ * __BIG_ENDIAN__ is only defined on some (PowerPC, not m68k), so a
++ * big-endian 68k host would otherwise swap words that are already in
++ * file order and load every classic city as garbage. */
++#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__)
++#define MICROPOLIS_HOST_BIG_ENDIAN (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
++#elif defined(__BIG_ENDIAN__)
++#define MICROPOLIS_HOST_BIG_ENDIAN 1
++#else
++#define MICROPOLIS_HOST_BIG_ENDIAN 0
++#endif
++
++#if !MICROPOLIS_HOST_BIG_ENDIAN
+ 
+ /**
+  * Convert an array of 16-bit values between the save-file byte order and

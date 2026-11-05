@@ -1,0 +1,46 @@
+Title: 0011-quiet-debug-prints
+Repository: micropoliscore
+Base-Commit: 69ccf87ed72d2d2950b70cf16ef1391439bd9d48
+Requires: 0010-big-endian-hosts.patch
+Author: AmigaOS 3.x port
+Date: 2026-11-05
+Upstream-Status: candidate
+Scope: generic - any platform
+
+Problem:
+  init() prints "init" and destroyMapArrays() prints the map pointer on stdout, which on AmigaOS lands in the Shell the game was started from.
+Solution:
+  Keep both prints behind MICROPOLIS_DEBUG.
+Validation:
+  cross-compiled for m68k-amigaos.
+Removal:
+  Permanent fix.
+
+diff --git a/packages/micropolis-engine/src/allocate.cpp b/packages/micropolis-engine/src/allocate.cpp
+index cae10b5..e3e6c7a 100644
+--- a/packages/micropolis-engine/src/allocate.cpp
++++ b/packages/micropolis-engine/src/allocate.cpp
+@@ -120,7 +120,9 @@ void Micropolis::initMapArrays()
+ /** Free all map arrays */
+ void Micropolis::destroyMapArrays()
+ {
++#ifdef MICROPOLIS_DEBUG
+     printf("destroyMapArrays: mapBase: %p\n", mapBase);
++#endif
+ 
+     if (mapBase != NULL) {
+         freePtr(mapBase);
+diff --git a/packages/micropolis-engine/src/micropolis.cpp b/packages/micropolis-engine/src/micropolis.cpp
+index 55d1e49..e02e582 100644
+--- a/packages/micropolis-engine/src/micropolis.cpp
++++ b/packages/micropolis-engine/src/micropolis.cpp
+@@ -152,7 +152,9 @@ void Micropolis::setCallback(Callback *callback0, emscripten::val callbackVal0)
+ /** Initialize simulator variables to a sane default. */
+ void Micropolis::init()
+ {
++#ifdef MICROPOLIS_DEBUG
+     printf("init");
++#endif
+     
+     ////////////////////////////////////////////////////////////////////////
+     // allocate.cpp

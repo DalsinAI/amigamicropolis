@@ -107,7 +107,7 @@ package: $(OUT)/$(PROG) AMIGA_PORT.md
 	$(MAKE) -f amiga/Makefile.amigaos icons
 
 # GlowIcons: amiga/icons/icons.json through AmiCradle's port_icons.py.
-# Data.info goes on every subdrawer; City.info on every bundled city and,
+# The data drawers get no icons; City.info goes on every bundled city and,
 # as icons/def_city.info, it is what the game gives each city it saves.
 icons:
 	rm -rf $(BUILD)/icons && mkdir -p $(BUILD)/icons
@@ -116,7 +116,6 @@ icons:
 	   $(BUILD)/icons/CITY.CTY.info $(OUT)/
 	cp $(BUILD)/icons/City.info $(OUT)/icons/def_city.info
 	for c in $(OUT)/cities/*.cty; do cp $(BUILD)/icons/CityIn.info "$$c.info"; done
-	cd $(OUT) && find . -mindepth 1 -type d | while read d; do cp $(CURDIR)/$(BUILD)/icons/Data.info "$$d.info"; done
 	cp $(BUILD)/icons/Micropolis-drawer.info $(DIST)/Micropolis.info
 
 clean:

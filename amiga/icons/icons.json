@@ -1,5 +1,5 @@
 {
-  "about": "The Workbench icons of the Micropolis drawer: python3 AMICRADLE/scripts/port_icons.py amiga/icons/icons.json --out <dir> (amiga/Makefile.amigaos runs it). The art is the game's own tool palette: the residential zone (MicropolisCore content/micropolis/images/tool_residential.png) for the program and the badge, the commercial zone (tool_commercial.png) for cities. Micropolis-drawer.info is the drawer's own icon, installed as Micropolis.info beside it. Data.info is the icon of every subdrawer. City.info goes on CITY.CTY and every bundled city, and as icons/def_city.info it is the icon the game gives each city it saves, its default tool then set to the program; CityIn.info is the bundled cities' copy, whose default tool is one drawer up.",
+  "about": "The Workbench icons of the Micropolis drawer: python3 AMICRADLE/scripts/port_icons.py amiga/icons/icons.json --out <dir> (amiga/Makefile.amigaos runs it). The art (art/micropolis.svg, drawn as an OS 3.5 GlowIcon: shaped, shaded, see-through round the edges) is The AmiCradle Team's own, under the same terms as the other Amiga files; art/micropolis.png is it rendered at 128 x 128. Micropolis-drawer.info is the drawer's own icon, installed as Micropolis.info beside it. City.info goes on CITY.CTY and every bundled city, and as icons/def_city.info it is the icon the game gives each city it saves, its default tool then set to the program; CityIn.info is the bundled cities' copy, whose default tool is one drawer up.",
   "drawer": {
     "name": "Micropolis",
     "file": "Micropolis-drawer.info"
@@ -25,11 +25,6 @@
     {
       "file": "COPYING.txt.info",
       "kind": "readme"
-    },
-    {
-      "file": "Data.info",
-      "kind": "drawer",
-      "type": "drawer"
     },
     {
       "file": "City.info",
